@@ -1,0 +1,8 @@
+{
+  "name": "@quiz/root",
+  "private": true,
+  "version": "1.0.0",
+  "pnpm": {
+    "onlyBuiltDependencies": ["esbuild"]
+  }
+}

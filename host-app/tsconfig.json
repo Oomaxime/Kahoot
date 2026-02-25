@@ -17,7 +17,8 @@
     "noFallthroughCasesInSwitch": true,
     "baseUrl": ".",
     "paths": {
-      "@shared/*": ["../packages/shared-types/*"]
+      "@shared/*": ["../packages/shared-types/*"],
+      "@shared-hooks/*": ["../packages/shared-hooks/*"]
     }
   },
   "include": ["src"],
