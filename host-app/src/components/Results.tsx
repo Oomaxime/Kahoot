@@ -1,46 +1,69 @@
-// ============================================================
-// Results - Affichage des resultats d'une question
-// A IMPLEMENTER : barres animees et bonne reponse
-// ============================================================
+import { motion } from 'motion/react'
+import type { QuestionPayload } from '@shared/index'
 
 interface ResultsProps {
-  /** Index de la bonne reponse (0-3) */
-  correctIndex: number
-  /** Distribution des reponses [nb_choix_0, nb_choix_1, nb_choix_2, nb_choix_3] */
+  question: QuestionPayload
+  correctIndexes: number[]
   distribution: number[]
-  /** Texte des choix de reponse */
-  choices: string[]
-  /** Callback quand le host clique sur "Question suivante" */
   onNext: () => void
 }
 
-/**
- * Composant affichant les resultats d'une question avec des barres animees.
- *
- * Ce qu'il faut implementer :
- * - Un titre "Resultats"
- * - Pour chaque choix, une barre horizontale proportionnelle au nombre de reponses
- *   (classes .result-bar-container, .result-bar-label, .result-bar-wrapper, .result-bar)
- *   La barre correcte a la classe .correct, les autres .incorrect
- *   Afficher un label "(Bonne reponse)" a cote du bon choix (classe .correct-label)
- * - La largeur de la barre est proportionnelle :
- *   width = `${maxCount > 0 ? (count / maxCount) * 100 : 0}%`
- * - Un bouton "Question suivante" (classe .btn-primary)
- *
- * Astuce : const maxCount = Math.max(...distribution, 1)
- */
-function Results({ correctIndex, distribution, choices, onNext }: ResultsProps) {
+const SYMBOLS = ['▲', '●', '■', '✦']
+
+function Results({ question, correctIndexes, distribution, onNext }: ResultsProps) {
+  const maxCount = Math.max(...distribution, 1)
+
   return (
-    <div className="phase-container">
+    <motion.div
+      className="phase-container"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+    >
+      <h1>Results</h1>
       <div className="results-container">
-        <h1>Resultats</h1>
-        {/* TODO: Pour chaque choix, afficher une barre de resultat */}
-        {/* TODO: Utiliser .result-bar.correct pour la bonne reponse */}
-        {/* TODO: Calculer la largeur proportionnelle de chaque barre */}
-        {/* TODO: Afficher le nombre de reponses dans chaque barre */}
-        {/* TODO: Bouton "Question suivante" */}
+        {question.choices.map((choice, i) => {
+          const isCorrect = correctIndexes.includes(i)
+          const count = distribution[i] ?? 0
+          const widthPct = `${Math.round((count / maxCount) * 100)}%`
+
+          return (
+            <div key={i} className="result-bar-container">
+              <div className="result-bar-label">
+                <span style={{ marginRight: '0.35rem', opacity: 0.6 }}>{SYMBOLS[i]}</span>
+                {choice}
+                {isCorrect && <span className="correct-label">✓</span>}
+              </div>
+              <div className="result-bar-wrapper">
+                <motion.div
+                  className={`result-bar ${isCorrect ? 'correct' : 'incorrect'}`}
+                  initial={{ width: 0 }}
+                  animate={{ width: widthPct }}
+                  transition={{
+                    duration: 0.75,
+                    ease: [0.34, 1.56, 0.64, 1],
+                    delay: i * 0.1,
+                  }}
+                >
+                  <span className="result-bar-count">{count}</span>
+                </motion.div>
+              </div>
+            </div>
+          )
+        })}
+
+        <motion.button
+          className="btn btn-primary"
+          onClick={onNext}
+          style={{ marginTop: '2rem', width: '100%' }}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.85 }}
+          whileTap={{ scale: 0.97, x: 3, y: 3 }}
+        >
+          Next Question →
+        </motion.button>
       </div>
-    </div>
+    </motion.div>
   )
 }
 

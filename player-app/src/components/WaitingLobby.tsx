@@ -1,31 +1,52 @@
-// ============================================================
-// WaitingLobby - Ecran d'attente pour les joueurs
-// A IMPLEMENTER : message d'attente et liste des joueurs
-// ============================================================
+import { motion } from 'motion/react'
 
 interface WaitingLobbyProps {
-  /** Liste des noms de joueurs connectes */
   players: string[]
 }
 
-/**
- * Composant ecran d'attente affiche cote joueur apres avoir rejoint.
- *
- * Ce qu'il faut implementer :
- * - Un message "En attente du host..." (classe .waiting-message)
- * - Le nombre de joueurs connectes
- * - La liste des joueurs (puces avec classe .player-chip dans un .player-list)
- *
- * Classes CSS disponibles : .waiting-container, .waiting-message,
- * .player-list, .player-chip
- */
+const chipVariants = {
+  hidden: { opacity: 0, scale: 0.7 },
+  show:   { opacity: 1, scale: 1 },
+}
+
 function WaitingLobby({ players }: WaitingLobbyProps) {
   return (
-    <div className="phase-container waiting-container">
-      {/* TODO: Message "En attente du host..." avec .waiting-message */}
-      {/* TODO: Nombre de joueurs */}
-      {/* TODO: Liste des joueurs avec .player-list et .player-chip */}
-    </div>
+    <motion.div
+      className="phase-container waiting-container"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+    >
+      <motion.div
+        style={{ fontSize: '3rem', marginBottom: '1rem' }}
+        animate={{ rotate: [0, -10, 10, -10, 0] }}
+        transition={{ repeat: Infinity, duration: 3, ease: 'easeInOut' }}
+      >
+        ⏳
+      </motion.div>
+
+      <p className="waiting-message">Waiting for host…</p>
+      <p className="player-count">
+        {players.length} player{players.length !== 1 ? 's' : ''} connected
+      </p>
+
+      <motion.div
+        className="player-list"
+        initial="hidden"
+        animate="show"
+        variants={{ show: { transition: { staggerChildren: 0.055 } } }}
+      >
+        {players.map(p => (
+          <motion.span
+            key={p}
+            className="player-chip"
+            variants={chipVariants}
+            transition={{ type: 'spring', stiffness: 350, damping: 20 }}
+          >
+            {p}
+          </motion.span>
+        ))}
+      </motion.div>
+    </motion.div>
   )
 }
 
