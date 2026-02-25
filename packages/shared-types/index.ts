@@ -1,36 +1,59 @@
-// ============================================================
-// Types partages entre le serveur, le host-app et le player-app
-// Ce fichier est COMPLET - ne pas modifier
-// ============================================================
+// Auth
 
-/** Une question de quiz avec ses choix et la bonne reponse */
+export interface AuthResponse {
+  token: string
+}
+
+export interface HostAuthPayload {
+  role: 'host'
+  username: string
+}
+
+export interface PlayerAuthPayload {
+  role: 'player'
+  name: string
+  playerId: string
+}
+
+export type AuthPayload = HostAuthPayload | PlayerAuthPayload
+
+// Quiz
+
 export interface QuizQuestion {
   id: string
   text: string
   choices: string[]
-  correctIndex: number
+  correctIndexes: number[]
   timerSec: number
 }
 
-/** Les differentes phases d'un quiz */
+export type QuestionPayload = Omit<QuizQuestion, 'correctIndexes'> & { isMultiple: boolean }
+
 export type QuizPhase = 'lobby' | 'question' | 'results' | 'leaderboard' | 'ended'
 
-/** Messages envoyes par les clients (host ou player) vers le serveur */
+// WebSocket messages
+
 export type ClientMessage =
   | { type: 'join'; quizCode: string; name: string }
-  | { type: 'answer'; questionId: string; choiceIndex: number }
+  | { type: 'answer'; questionId: string; choiceIndexes: number[] }
   | { type: 'host:create'; title: string; questions: QuizQuestion[] }
   | { type: 'host:start' }
   | { type: 'host:next' }
   | { type: 'host:end' }
 
-/** Messages envoyes par le serveur vers les clients */
 export type ServerMessage =
+  | { type: 'sync'; phase: QuizPhase; data: { roomCode: string } }
   | { type: 'joined'; playerId: string; players: string[] }
-  | { type: 'question'; question: Omit<QuizQuestion, 'correctIndex'>; index: number; total: number }
+  | { type: 'question'; question: QuestionPayload; index: number; total: number }
   | { type: 'tick'; remaining: number }
-  | { type: 'results'; correctIndex: number; distribution: number[]; scores: Record<string, number> }
+  | {
+      type: 'results'
+      correctIndexes: number[]
+      distribution: number[]
+      scores: Record<string, number>
+      scoreGained?: number
+      feedbackType?: 'correct' | 'partial' | 'wrong'
+    }
   | { type: 'leaderboard'; rankings: { name: string; score: number }[] }
   | { type: 'ended' }
   | { type: 'error'; message: string }
-  | { type: 'sync'; phase: QuizPhase; data: unknown }

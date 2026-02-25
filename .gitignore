@@ -1,5 +1,8 @@
 node_modules/
 .node_modules/
+dist/
+.env
+*.local
 built/*
 tests/cases/rwc/*
 tests/cases/perf/*
@@ -56,6 +59,7 @@ internal/
 .idea
 yarn.lock
 yarn-error.log
+CLAUDE.MD
 .parallelperf.*
 tests/baselines/reference/dt
 .failed-tests

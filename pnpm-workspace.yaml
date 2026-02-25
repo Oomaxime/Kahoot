@@ -1,0 +1,5 @@
+packages:
+  - 'packages/*'
+  - 'host-app'
+  - 'player-app'
+  - 'server'
