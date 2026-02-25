@@ -1,5 +1,6 @@
 import { motion } from 'motion/react'
 import clsx from 'clsx'
+import { playClick } from '@shared-hooks/clickSound'
 import type { QuestionPayload } from '@shared/index'
 
 interface AnswerScreenProps {
@@ -36,7 +37,11 @@ function AnswerScreen({ question, remaining, selectedChoices, hasAnswered, onAns
             <motion.button
               key={i}
               className={clsx('answer-btn', isSelected && 'selected')}
-              onClick={() => !isDisabled && onAnswer(i)}
+              onClick={() => {
+                if (isDisabled) return
+                playClick()
+                onAnswer(i)
+              }}
               disabled={isDisabled}
               whileTap={!isDisabled ? { scale: 0.95, x: 2, y: 2 } : {}}
               initial={{ opacity: 0, scale: 0.82 }}
@@ -58,7 +63,7 @@ function AnswerScreen({ question, remaining, selectedChoices, hasAnswered, onAns
         <motion.button
           className="btn-primary"
           style={{ marginTop: '1.25rem' }}
-          onClick={onSubmit}
+          onClick={() => { playClick(); onSubmit() }}
           disabled={selectedChoices.length === 0}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}

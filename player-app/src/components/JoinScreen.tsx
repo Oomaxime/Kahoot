@@ -1,5 +1,7 @@
 import { useState } from 'react'
-import { motion } from 'motion/react'
+import { AnimatePresence, motion } from 'motion/react'
+import { playClick } from '@shared-hooks/clickSound'
+import { Howler } from 'howler'
 
 interface JoinScreenProps {
   onJoin: (code: string, name: string) => void
@@ -14,6 +16,11 @@ function JoinScreen({ onJoin, error }: JoinScreenProps) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!code.trim() || !name.trim() || loading) return
+    playClick()
+    // Resume AudioContext NOW, while we're inside a user gesture.
+    // By the time the lobby music tries to play (after WS response),
+    // the context will already be running.
+    Howler.ctx?.resume()
     setLoading(true)
     await onJoin(code.toUpperCase(), name.trim())
     setLoading(false)
@@ -30,15 +37,21 @@ function JoinScreen({ onJoin, error }: JoinScreenProps) {
       <h1>Join Quiz</h1>
       <p className="subtitle">Enter the room code and your name</p>
 
-      {error && (
-        <motion.div
-          className="error-message"
-          initial={{ opacity: 0, height: 0 }}
-          animate={{ opacity: 1, height: 'auto' }}
-        >
-          {error}
-        </motion.div>
-      )}
+      <AnimatePresence>
+        {error && (
+          <motion.div
+            key="err"
+            className="error-message"
+            initial={{ opacity: 0, scaleY: 0, marginBottom: 0 }}
+            animate={{ opacity: 1, scaleY: 1, marginBottom: '1rem' }}
+            exit={{ opacity: 0, scaleY: 0, marginBottom: 0 }}
+            style={{ transformOrigin: 'top', overflow: 'hidden' }}
+            transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+          >
+            {error}
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <div className="form-group">
         <label htmlFor="code">Room Code</label>

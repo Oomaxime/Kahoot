@@ -1,4 +1,5 @@
 import { motion } from 'motion/react'
+import { playClick } from '@shared-hooks/clickSound'
 
 interface LeaderboardProps {
   rankings: { name: string; score: number }[]
@@ -38,7 +39,7 @@ function Leaderboard({ rankings, onEnd }: LeaderboardProps) {
       {onEnd && (
         <motion.button
           className="btn btn-secondary"
-          onClick={onEnd}
+          onClick={() => { playClick(); onEnd() }}
           style={{ marginTop: '2rem' }}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}

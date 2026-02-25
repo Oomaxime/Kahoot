@@ -1,4 +1,5 @@
 import { motion } from 'motion/react'
+import { playClick } from '@shared-hooks/clickSound'
 import type { QuestionPayload } from '@shared/index'
 
 interface ResultsProps {
@@ -53,7 +54,7 @@ function Results({ question, correctIndexes, distribution, onNext }: ResultsProp
 
         <motion.button
           className="btn btn-primary"
-          onClick={onNext}
+          onClick={() => { playClick(); onNext() }}
           style={{ marginTop: '2rem', width: '100%' }}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}

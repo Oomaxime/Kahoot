@@ -2,6 +2,7 @@ import { useFieldArray, useForm, Controller } from 'react-hook-form'
 import { valibotResolver } from '@hookform/resolvers/valibot'
 import * as v from 'valibot'
 import { motion, AnimatePresence } from 'motion/react'
+import { playClick } from '@shared-hooks/clickSound'
 import type { QuizQuestion } from '@shared/index'
 
 const QuestionSchema = v.object({
@@ -54,6 +55,7 @@ function CreateQuiz({ onSubmit }: CreateQuizProps) {
   const { fields, append, remove } = useFieldArray({ control, name: 'questions' })
 
   const onFormSubmit = (data: FormValues) => {
+    playClick()
     onSubmit(data.title, data.questions as QuizQuestion[])
   }
 
@@ -161,7 +163,7 @@ function CreateQuiz({ onSubmit }: CreateQuizProps) {
         <button
           type="button"
           className="btn-add-question"
-          onClick={() => append(newQuestion())}
+          onClick={() => { playClick(); append(newQuestion()) }}
         >
           + Add Question
         </button>
