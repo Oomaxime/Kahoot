@@ -4,6 +4,8 @@ services:
       context: .
       dockerfile: server/Dockerfile
     restart: unless-stopped
+    env_file:
+      - .env
     expose:
       - "3001"
     healthcheck:

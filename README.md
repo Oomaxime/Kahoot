@@ -109,6 +109,9 @@ npm run dev
 cd player-app
 npm run dev
 ```
+Test it: 
+- HOST: `http://localhost:3081/`
+- PLAYER: `http://localhost:3080/`
 
 ## Repartition de l'equipe (3 personnes)
 
