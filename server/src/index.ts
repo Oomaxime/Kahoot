@@ -1,8 +1,3 @@
-// ============================================================
-// Serveur WebSocket - Point d'entree
-// A IMPLEMENTER : remplir les cas du switch avec la logique
-// ============================================================
-
 import { createServer } from 'http'
 import { WebSocketServer, WebSocket } from 'ws'
 import type { ClientMessage } from '../../packages/shared-types'
@@ -11,17 +6,20 @@ import { send, generateQuizCode } from './utils'
 
 const PORT = 3001
 
-// ---- Stockage global des salles ----
-/** Map des salles : code du quiz -> QuizRoom */
 const rooms = new Map<string, QuizRoom>()
-
-/** Map inverse pour retrouver la salle d'un joueur : WebSocket -> { room, playerId } */
 const clientRoomMap = new Map<WebSocket, { room: QuizRoom; playerId: string }>()
-
-/** Map pour retrouver la salle du host : WebSocket -> QuizRoom */
 const hostRoomMap = new Map<WebSocket, QuizRoom>()
 
-// ---- Creation du serveur HTTP + WebSocket ----
+function cleanupRoom(room: QuizRoom, hostWs: WebSocket): void {
+  room.end()
+  rooms.delete(room.code)
+  hostRoomMap.delete(hostWs)
+
+  for (const [clientWs, entry] of clientRoomMap) {
+    if (entry.room === room) clientRoomMap.delete(clientWs)
+  }
+}
+
 const httpServer = createServer((_req, res) => {
   res.writeHead(200, { 'Content-Type': 'text/plain' })
   res.end('Quiz WebSocket Server is running')
@@ -29,14 +27,10 @@ const httpServer = createServer((_req, res) => {
 
 const wss = new WebSocketServer({ server: httpServer })
 
-console.log(`[Server] Demarrage sur le port ${PORT}...`)
-
-// ---- Gestion des connexions WebSocket ----
 wss.on('connection', (ws: WebSocket) => {
   console.log('[Server] Nouvelle connexion WebSocket')
 
   ws.on('message', (raw: Buffer) => {
-    // --- Parsing du message JSON ---
     let message: ClientMessage
     try {
       message = JSON.parse(raw.toString()) as ClientMessage
@@ -47,88 +41,91 @@ wss.on('connection', (ws: WebSocket) => {
 
     console.log('[Server] Message recu:', message.type)
 
-    // --- Routage par type de message ---
     switch (message.type) {
-      // ============================================================
-      // Un joueur veut rejoindre un quiz
-      // ============================================================
       case 'join': {
-        // TODO: Recuperer la salle avec message.quizCode depuis la map rooms
-        // TODO: Si la salle n'existe pas, envoyer une erreur
-        // TODO: Si la salle n'est pas en phase 'lobby', envoyer une erreur
-        // TODO: Appeler room.addPlayer(message.name, ws)
-        // TODO: Stocker l'association ws -> { room, playerId } dans clientRoomMap
+        const room = rooms.get(message.quizCode)
+        if (!room) {
+          send(ws, { type: 'error', message: 'Salle introuvable' })
+          break
+        }
+        if (room.phase !== 'lobby') {
+          send(ws, { type: 'error', message: 'Partie deja en cours' })
+          break
+        }
+        const playerId = room.addPlayer(message.name, ws)
+        clientRoomMap.set(ws, { room, playerId })
         break
       }
 
-      // ============================================================
-      // Un joueur envoie sa reponse
-      // ============================================================
       case 'answer': {
-        // TODO: Recuperer le { room, playerId } depuis clientRoomMap
-        // TODO: Si non trouve, envoyer une erreur
-        // TODO: Appeler room.handleAnswer(playerId, message.choiceIndex)
+        const entry = clientRoomMap.get(ws)
+        if (!entry) {
+          send(ws, { type: 'error', message: 'Joueur non enregistre' })
+          break
+        }
+        entry.room.handleAnswer(entry.playerId, message.choiceIndexes)
         break
       }
 
-      // ============================================================
-      // Le host cree un nouveau quiz
-      // ============================================================
       case 'host:create': {
-        // TODO: Generer un code unique avec generateQuizCode()
-        // TODO: Creer une nouvelle QuizRoom (id = Date.now().toString(), code)
-        // TODO: Assigner hostWs, title, questions sur la room
-        // TODO: Stocker la room dans rooms (cle = code)
-        // TODO: Stocker l'association host ws -> room dans hostRoomMap
-        // TODO: Envoyer un message sync au host : { type: 'sync', phase: 'lobby', data: { quizCode: code } }
-        console.log(`[Server] Quiz cree avec le code: ???`)
+        const code = generateQuizCode()
+        const room = new QuizRoom(Date.now().toString(), code)
+        room.hostWs = ws
+        room.title = message.title
+        room.questions = message.questions
+
+        rooms.set(code, room)
+        hostRoomMap.set(ws, room)
+        send(ws, { type: 'sync', phase: 'lobby', data: { roomCode: code } })
+        console.log(`[Server] Quiz cree avec le code: ${code}`)
         break
       }
 
-      // ============================================================
-      // Le host demarre le quiz
-      // ============================================================
       case 'host:start': {
-        // TODO: Recuperer la room depuis hostRoomMap
-        // TODO: Si non trouvee, envoyer une erreur
-        // TODO: Appeler room.start()
+        const room = hostRoomMap.get(ws)
+        if (!room) {
+          send(ws, { type: 'error', message: 'Impossible de demarrer : aucune salle associee' })
+          break
+        }
+        room.start()
         break
       }
 
-      // ============================================================
-      // Le host passe a la question suivante
-      // ============================================================
       case 'host:next': {
-        // TODO: Recuperer la room depuis hostRoomMap
-        // TODO: Si non trouvee, envoyer une erreur
-        // TODO: Appeler room.nextQuestion()
+        const room = hostRoomMap.get(ws)
+        if (!room) {
+          send(ws, { type: 'error', message: 'Impossible de passer a la suite : aucune salle associee' })
+          break
+        }
+        room.nextQuestion()
         break
       }
 
-      // ============================================================
-      // Le host termine le quiz
-      // ============================================================
       case 'host:end': {
-        // TODO: Recuperer la room depuis hostRoomMap
-        // TODO: Si non trouvee, envoyer une erreur
-        // TODO: Appeler room.end()
-        // TODO: Supprimer la room de rooms
-        // TODO: Nettoyer hostRoomMap et clientRoomMap
+        const room = hostRoomMap.get(ws)
+        if (!room) {
+          send(ws, { type: 'error', message: 'Impossible de terminer : aucune salle associee' })
+          break
+        }
+        cleanupRoom(room, ws)
         break
       }
 
       default: {
-        send(ws, { type: 'error', message: `Type de message inconnu` })
+        send(ws, { type: 'error', message: 'Type de message inconnu' })
       }
     }
   })
 
-  // --- Gestion de la deconnexion ---
   ws.on('close', () => {
     console.log('[Server] Connexion fermee')
 
-    // TODO: Nettoyer clientRoomMap si c'etait un joueur
-    // TODO: Nettoyer hostRoomMap si c'etait un host
+    if (clientRoomMap.has(ws)) {
+      clientRoomMap.delete(ws)
+    }
+
+    const room = hostRoomMap.get(ws)
+    if (room) cleanupRoom(room, ws)
   })
 
   ws.on('error', (err: Error) => {
@@ -136,7 +133,6 @@ wss.on('connection', (ws: WebSocket) => {
   })
 })
 
-// ---- Demarrage du serveur ----
 httpServer.listen(PORT, () => {
   console.log(`[Server] Serveur WebSocket demarre sur ws://localhost:${PORT}`)
 })
