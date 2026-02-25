@@ -109,7 +109,7 @@ function App() {
         )
 
       case 'leaderboard':
-        return <ScoreScreen rankings={rankings} playerName={user?.name ?? ''} />
+        return <ScoreScreen rankings={rankings} playerName={user?.role === 'player' ? user.name : ''} />
 
       case 'ended':
         return (
