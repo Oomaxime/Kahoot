@@ -1,0 +1,66 @@
+services:
+  server:
+    build:
+      context: .
+      dockerfile: server/Dockerfile
+    restart: unless-stopped
+    expose:
+      - "3001"
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:3001"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    networks:
+      - quiz-net
+
+  player-app:
+    build:
+      context: .
+      dockerfile: player-app/Dockerfile
+      args:
+        VITE_WS_URL: ws://localhost/ws
+        VITE_API_URL: ""
+    restart: unless-stopped
+    expose:
+      - "3000"
+    networks:
+      - quiz-net
+
+  host-app:
+    build:
+      context: .
+      dockerfile: host-app/Dockerfile
+      args:
+        VITE_WS_URL: ws://localhost/ws
+        VITE_API_URL: ""
+    restart: unless-stopped
+    expose:
+      - "3002"
+    networks:
+      - quiz-net
+
+  npm:
+    image: jc21/nginx-proxy-manager:2
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+      - "81:81"
+    volumes:
+      - npm-data:/data
+      - npm-letsencrypt:/etc/letsencrypt
+    depends_on:
+      - server
+      - player-app
+      - host-app
+    networks:
+      - quiz-net
+
+volumes:
+  npm-data:
+  npm-letsencrypt:
+
+networks:
+  quiz-net:
+    driver: bridge
