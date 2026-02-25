@@ -1,49 +1,83 @@
-// ============================================================
-// JoinScreen - Formulaire pour rejoindre un quiz
-// A IMPLEMENTER : champs code et nom, bouton rejoindre
-// ============================================================
-
 import { useState } from 'react'
+import { motion } from 'motion/react'
 
 interface JoinScreenProps {
-  /** Callback appele quand le joueur soumet le formulaire */
   onJoin: (code: string, name: string) => void
-  /** Message d'erreur optionnel (ex: "Code invalide") */
   error?: string
 }
 
-/**
- * Composant formulaire pour rejoindre un quiz existant.
- *
- * Ce qu'il faut implementer :
- * - Un champ pour le code du quiz (6 caracteres, majuscules)
- *   avec la classe .code-input pour le style monospace
- * - Un champ pour le pseudo du joueur
- * - Un bouton "Rejoindre" (classe .btn-primary)
- * - Afficher le message d'erreur s'il existe (classe .error-message)
- * - Valider que les deux champs ne sont pas vides avant d'appeler onJoin
- *
- * Classes CSS disponibles : .join-form, .form-group, .code-input,
- * .error-message, .btn-primary
- */
 function JoinScreen({ onJoin, error }: JoinScreenProps) {
-  // TODO: State pour le code du quiz
-  // TODO: State pour le pseudo
+  const [code, setCode] = useState('')
+  const [name, setName] = useState('')
+  const [loading, setLoading] = useState(false)
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    // TODO: Valider que les champs ne sont pas vides
-    // TODO: Appeler onJoin(code.toUpperCase(), name)
+    if (!code.trim() || !name.trim() || loading) return
+    setLoading(true)
+    await onJoin(code.toUpperCase(), name.trim())
+    setLoading(false)
   }
 
   return (
-    <form className="join-form" onSubmit={handleSubmit}>
-      <h1>Rejoindre un Quiz</h1>
-      {/* TODO: Afficher l'erreur si elle existe */}
-      {/* TODO: Champ code du quiz avec classe .code-input */}
-      {/* TODO: Champ pseudo */}
-      {/* TODO: Bouton Rejoindre */}
-    </form>
+    <motion.form
+      className="join-form"
+      onSubmit={handleSubmit}
+      initial={{ opacity: 0, y: 28 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ type: 'spring', stiffness: 280, damping: 22 }}
+    >
+      <h1>Join Quiz</h1>
+      <p className="subtitle">Enter the room code and your name</p>
+
+      {error && (
+        <motion.div
+          className="error-message"
+          initial={{ opacity: 0, height: 0 }}
+          animate={{ opacity: 1, height: 'auto' }}
+        >
+          {error}
+        </motion.div>
+      )}
+
+      <div className="form-group">
+        <label htmlFor="code">Room Code</label>
+        <input
+          id="code"
+          type="text"
+          className="code-input"
+          value={code}
+          onChange={e => setCode(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 6))}
+          placeholder="ABCDEF"
+          maxLength={6}
+          autoFocus
+          autoComplete="off"
+          autoCapitalize="characters"
+        />
+      </div>
+
+      <div className="form-group">
+        <label htmlFor="name">Your Name</label>
+        <input
+          id="name"
+          type="text"
+          value={name}
+          onChange={e => setName(e.target.value.slice(0, 20))}
+          placeholder="Player 1"
+          maxLength={20}
+          autoComplete="off"
+        />
+      </div>
+
+      <motion.button
+        type="submit"
+        className="btn-primary"
+        disabled={!code.trim() || !name.trim() || loading}
+        whileTap={!loading ? { scale: 0.97, x: 3, y: 3 } : {}}
+      >
+        {loading ? 'Joining…' : 'Join →'}
+      </motion.button>
+    </motion.form>
   )
 }
 

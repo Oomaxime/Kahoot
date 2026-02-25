@@ -1,36 +1,67 @@
-// ============================================================
-// FeedbackScreen - Retour correct/incorrect
-// A IMPLEMENTER : icone et score
-// ============================================================
+import { motion } from 'motion/react'
 
 interface FeedbackScreenProps {
-  /** Si true, le joueur a repondu correctement */
-  correct: boolean
-  /** Score total actuel du joueur */
-  score: number
+  feedbackType: 'correct' | 'partial' | 'wrong'
+  scoreGained: number
+  totalScore: number
 }
 
-/**
- * Composant affichant le retour apres une question (correct ou incorrect).
- *
- * Ce qu'il faut implementer :
- * - Un conteneur avec la classe .feedback et .correct ou .incorrect selon le resultat
- * - Une icone grande (classe .feedback-icon)
- *   Le CSS ajoute automatiquement un check ou un X via ::after
- * - Un texte "Bonne reponse !" ou "Mauvaise reponse" (classe .feedback-text)
- * - Le score total du joueur (classe .feedback-score) : "Score : 1500 pts"
- *
- * Classes CSS disponibles : .feedback-container, .feedback, .correct, .incorrect,
- * .feedback-icon, .feedback-text, .feedback-score
- */
-function FeedbackScreen({ correct, score }: FeedbackScreenProps) {
+const CONFIG = {
+  correct:  { emoji: '✓', text: 'Correct!',  cssClass: 'correct'   },
+  partial:  { emoji: '~', text: 'Partial!',  cssClass: 'partial'   },
+  wrong:    { emoji: '✗', text: 'Wrong!',    cssClass: 'incorrect' },
+}
+
+function FeedbackScreen({ feedbackType, scoreGained, totalScore }: FeedbackScreenProps) {
+  const { emoji, text, cssClass } = CONFIG[feedbackType]
+
   return (
-    <div className="phase-container feedback-container">
-      {/* TODO: Conteneur .feedback avec .correct ou .incorrect */}
-      {/* TODO: Icone .feedback-icon */}
-      {/* TODO: Texte "Bonne reponse !" ou "Mauvaise reponse" */}
-      {/* TODO: Score "Score : {score} pts" */}
-    </div>
+    <motion.div
+      className="phase-container feedback-container"
+      initial={{ opacity: 0, scale: 0.85 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{ type: 'spring', stiffness: 380, damping: 22 }}
+    >
+      <div className={`feedback ${cssClass}`}>
+        <motion.span
+          className="feedback-icon"
+          initial={{ scale: 0, rotate: -40 }}
+          animate={{ scale: 1, rotate: 0 }}
+          transition={{ type: 'spring', stiffness: 500, damping: 16, delay: 0.08 }}
+        >
+          {emoji}
+        </motion.span>
+
+        <motion.p
+          className="feedback-text"
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.18 }}
+        >
+          {text}
+        </motion.p>
+
+        {scoreGained > 0 && (
+          <motion.p
+            className="feedback-gained"
+            initial={{ opacity: 0, scale: 0.5 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ type: 'spring', stiffness: 420, damping: 16, delay: 0.28 }}
+          >
+            +{scoreGained.toLocaleString()}
+          </motion.p>
+        )}
+
+        <motion.p
+          className="feedback-score"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.5 }}
+        >
+          Total: {totalScore.toLocaleString()} pts
+        </motion.p>
+      </div>
+    </motion.div>
   )
 }
 

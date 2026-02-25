@@ -1,39 +1,39 @@
-// ============================================================
-// ScoreScreen - Classement avec position du joueur
-// A IMPLEMENTER : leaderboard avec mise en surbrillance
-// ============================================================
+import { motion } from 'motion/react'
+import clsx from 'clsx'
 
 interface ScoreScreenProps {
-  /** Classement trie par score decroissant */
   rankings: { name: string; score: number }[]
-  /** Nom du joueur actuel (pour le mettre en surbrillance) */
   playerName: string
 }
 
-/**
- * Composant affichant le classement avec la position du joueur en surbrillance.
- *
- * Ce qu'il faut implementer :
- * - Un titre "Classement" (classe .leaderboard-title)
- * - La liste ordonnee des joueurs (classe .leaderboard)
- * - Chaque joueur est dans un .leaderboard-item
- *   Si c'est le joueur actuel, ajouter aussi la classe .is-me
- * - Afficher pour chaque joueur :
- *   - Son rang (1, 2, 3...) dans .leaderboard-rank
- *   - Son nom dans .leaderboard-name
- *   - Son score dans .leaderboard-score
- *
- * Classes CSS disponibles : .score-screen, .leaderboard-title, .leaderboard,
- * .leaderboard-item, .is-me, .leaderboard-rank, .leaderboard-name, .leaderboard-score
- */
+const MEDALS = ['🥇', '🥈', '🥉']
+
 function ScoreScreen({ rankings, playerName }: ScoreScreenProps) {
   return (
     <div className="phase-container score-screen">
-      {/* TODO: Titre "Classement" avec .leaderboard-title */}
+      <motion.p
+        className="leaderboard-title"
+        initial={{ opacity: 0, y: -16 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ type: 'spring', stiffness: 300, damping: 24 }}
+      >
+        🏆 Leaderboard
+      </motion.p>
+
       <div className="leaderboard">
-        {/* TODO: Pour chaque joueur dans rankings, afficher un .leaderboard-item */}
-        {/* TODO: Ajouter la classe .is-me si ranking.name === playerName */}
-        {/* TODO: Afficher rang, nom et score */}
+        {rankings.map((r, i) => (
+          <motion.div
+            key={r.name}
+            className={clsx('leaderboard-item', r.name === playerName && 'is-me')}
+            initial={{ opacity: 0, x: -24 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: i * 0.07, type: 'spring', stiffness: 300, damping: 24 }}
+          >
+            <span className="leaderboard-rank">{MEDALS[i] ?? `#${i + 1}`}</span>
+            <span className="leaderboard-name">{r.name}</span>
+            <span className="leaderboard-score">{r.score.toLocaleString()}</span>
+          </motion.div>
+        ))}
       </div>
     </div>
   )

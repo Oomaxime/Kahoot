@@ -1,48 +1,69 @@
-// ============================================================
-// QuestionView - Affichage de la question en cours (cote host)
-// A IMPLEMENTER : question, choix, timer, compteur de reponses
-// ============================================================
-
-import type { QuizQuestion } from '@shared/index'
+import { motion } from 'motion/react'
+import type { QuestionPayload } from '@shared/index'
 
 interface QuestionViewProps {
-  /** La question en cours (sans correctIndex) */
-  question: Omit<QuizQuestion, 'correctIndex'>
-  /** Index de la question (0-based) */
+  question: QuestionPayload
   index: number
-  /** Nombre total de questions */
   total: number
-  /** Temps restant en secondes */
   remaining: number
-  /** Nombre de joueurs ayant repondu */
   answerCount: number
-  /** Nombre total de joueurs */
   totalPlayers: number
 }
 
-/**
- * Composant affichant la question en cours sur l'ecran du host.
- *
- * Ce qu'il faut implementer :
- * - En-tete avec "Question X / Y" (classe .question-header)
- * - Le timer en cercle (classes .countdown, .countdown-circle)
- *   Ajouter la classe .warning si remaining <= 10, .danger si remaining <= 3
- * - Le texte de la question (classe .question-text)
- * - Les 4 choix dans une grille (classes .choices-grid, .choice-card)
- * - Le compteur de reponses "X / Y reponses" (classe .answer-counter)
- *
- * Note : cote host on affiche les choix mais sans interaction
- * (c'est purement visuel pour projeter au mur)
- */
+const SYMBOLS = ['▲', '●', '■', '✦']
+
 function QuestionView({ question, index, total, remaining, answerCount, totalPlayers }: QuestionViewProps) {
+  const timerClass = remaining <= 3 ? 'danger' : remaining <= 10 ? 'warning' : ''
+
   return (
-    <div className="phase-container">
-      {/* TODO: En-tete "Question {index + 1} / {total}" */}
-      {/* TODO: Timer avec .countdown-circle (+ .warning / .danger selon remaining) */}
-      {/* TODO: Texte de la question avec .question-text */}
-      {/* TODO: Grille des 4 choix avec .choices-grid et .choice-card */}
-      {/* TODO: Compteur "{answerCount} / {totalPlayers} reponses" */}
-    </div>
+    <motion.div
+      className="phase-container"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.2 }}
+    >
+      <div className="question-header">
+        <span>Question {index + 1} / {total}</span>
+        <span>{totalPlayers} player{totalPlayers !== 1 ? 's' : ''}</span>
+      </div>
+
+      <div className="countdown">
+        <motion.div
+          className={`countdown-circle ${timerClass}`}
+          animate={remaining <= 3 ? { scale: [1, 1.18, 1] } : { scale: 1 }}
+          transition={remaining <= 3 ? { repeat: Infinity, duration: 0.45 } : {}}
+        >
+          {remaining}
+        </motion.div>
+      </div>
+
+      <motion.p
+        className="question-text"
+        key={question.id}
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.1 }}
+      >
+        {question.text}
+      </motion.p>
+
+      <div className="choices-grid">
+        {question.choices.map((choice, i) => (
+          <motion.div
+            key={i}
+            className="choice-card"
+            initial={{ opacity: 0, scale: 0.88 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.15 + i * 0.07, type: 'spring', stiffness: 320, damping: 24 }}
+          >
+            <span style={{ opacity: 0.75 }}>{SYMBOLS[i]}</span>
+            {choice}
+          </motion.div>
+        ))}
+      </div>
+
+      <p className="answer-counter">{answerCount} / {totalPlayers} answers</p>
+    </motion.div>
   )
 }
 
