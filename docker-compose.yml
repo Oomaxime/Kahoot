@@ -21,7 +21,7 @@ services:
       context: .
       dockerfile: player-app/Dockerfile
       args:
-        VITE_WS_URL: ws://localhost:3080/ws
+        VITE_WS_URL: ""
         VITE_API_URL: ""
     restart: unless-stopped
     expose:
@@ -34,7 +34,7 @@ services:
       context: .
       dockerfile: host-app/Dockerfile
       args:
-        VITE_WS_URL: ws://localhost:3081/ws
+        VITE_WS_URL: ""
         VITE_API_URL: ""
     restart: unless-stopped
     expose:

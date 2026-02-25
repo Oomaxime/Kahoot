@@ -13,7 +13,8 @@ import AnswerScreen from './components/AnswerScreen'
 import FeedbackScreen from './components/FeedbackScreen'
 import ScoreScreen from './components/ScoreScreen'
 
-const WS_URL = import.meta.env.VITE_WS_URL
+const _wsEnv = import.meta.env.VITE_WS_URL
+const WS_URL = _wsEnv || `${window.location.protocol === 'https:' ? 'wss' : 'ws'}://${window.location.host}/ws`
 
 function App() {
   const token = useAuthStore(s => s.token)
