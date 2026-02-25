@@ -1,4 +1,5 @@
 import { motion } from 'motion/react'
+import { playClick } from '@shared-hooks/clickSound'
 
 interface LobbyProps {
   quizCode: string
@@ -53,7 +54,7 @@ function Lobby({ quizCode, players, onStart }: LobbyProps) {
 
         <motion.button
           className="btn btn-start"
-          onClick={onStart}
+          onClick={() => { playClick(); onStart() }}
           disabled={players.length === 0}
           whileTap={players.length > 0 ? { scale: 0.97, x: 3, y: 3 } : {}}
         >

@@ -1,5 +1,7 @@
 import { useState } from 'react'
-import { motion } from 'motion/react'
+import { AnimatePresence, motion } from 'motion/react'
+import { playClick } from '@shared-hooks/clickSound'
+import { Howler } from 'howler'
 
 interface LoginScreenProps {
   onLogin: (username: string) => void
@@ -13,6 +15,8 @@ function LoginScreen({ onLogin, error }: LoginScreenProps) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!username.trim() || loading) return
+    playClick()
+    Howler.ctx?.resume()
     setLoading(true)
     await onLogin(username.trim())
     setLoading(false)
@@ -34,15 +38,21 @@ function LoginScreen({ onLogin, error }: LoginScreenProps) {
       </motion.h1>
       <p className="subtitle">Create and host your quiz</p>
 
-      {error && (
-        <motion.div
-          className="error-message"
-          initial={{ opacity: 0, height: 0 }}
-          animate={{ opacity: 1, height: 'auto' }}
-        >
-          {error}
-        </motion.div>
-      )}
+      <AnimatePresence>
+        {error && (
+          <motion.div
+            key="err"
+            className="error-message"
+            initial={{ opacity: 0, scaleY: 0, marginBottom: 0 }}
+            animate={{ opacity: 1, scaleY: 1, marginBottom: '1rem' }}
+            exit={{ opacity: 0, scaleY: 0, marginBottom: 0 }}
+            style={{ transformOrigin: 'top', overflow: 'hidden' }}
+            transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+          >
+            {error}
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <form onSubmit={handleSubmit}>
         <div className="form-group" style={{ textAlign: 'left' }}>

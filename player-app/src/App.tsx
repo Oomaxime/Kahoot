@@ -4,6 +4,8 @@ import { useWebSocket } from './hooks/useWebSocket'
 import { useAuthStore } from './store/authStore'
 import { usePlayerGameStore } from './store/gameStore'
 import { loginPlayer } from '@shared-hooks/authService'
+import { useMusic } from '@shared-hooks/useMusic'
+import { PLAYER_TRACKS, MUSIC_VOLUME } from './music/tracks'
 
 import JoinScreen from './components/JoinScreen'
 import WaitingLobby from './components/WaitingLobby'
@@ -11,7 +13,8 @@ import AnswerScreen from './components/AnswerScreen'
 import FeedbackScreen from './components/FeedbackScreen'
 import ScoreScreen from './components/ScoreScreen'
 
-const WS_URL = import.meta.env.VITE_WS_URL
+const _wsEnv = import.meta.env.VITE_WS_URL
+const WS_URL = _wsEnv || `${window.location.protocol === 'https:' ? 'wss' : 'ws'}://${window.location.host}/ws`
 
 function App() {
   const token = useAuthStore(s => s.token)
@@ -35,6 +38,9 @@ function App() {
 
   const [joinError, setJoinError] = useState<string | null>(null)
   const roomCodeRef = useRef<string | null>(null)
+
+  const trackName = PLAYER_TRACKS[phase] ?? null
+  useMusic(trackName ? `/music/${trackName}.mp3` : null, { volume: MUSIC_VOLUME })
 
   const wsUrl = token ? `${WS_URL}?token=${token}` : null
   const { status, sendMessage } = useWebSocket(wsUrl, applyMessage)

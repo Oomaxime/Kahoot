@@ -4,6 +4,8 @@ import { useWebSocket } from './hooks/useWebSocket'
 import { useAuthStore } from './store/authStore'
 import { useHostGameStore } from './store/gameStore'
 import { loginHost } from '@shared-hooks/authService'
+import { useMusic } from '@shared-hooks/useMusic'
+import { HOST_TRACKS, MUSIC_VOLUME } from './music/tracks'
 import type { QuizQuestion } from '@shared/index'
 
 import LoginScreen from './components/LoginScreen'
@@ -13,7 +15,8 @@ import QuestionView from './components/QuestionView'
 import Results from './components/Results'
 import Leaderboard from './components/Leaderboard'
 
-const WS_URL = import.meta.env.VITE_WS_URL
+const _wsEnv = import.meta.env.VITE_WS_URL
+const WS_URL = _wsEnv || `${window.location.protocol === 'https:' ? 'wss' : 'ws'}://${window.location.host}/ws`
 
 function App() {
   const token = useAuthStore(s => s.token)
@@ -35,6 +38,9 @@ function App() {
   const { status, sendMessage } = useWebSocket(wsUrl, applyMessage)
 
   const [loginError, setLoginError] = useState<string | null>(null)
+
+  const trackName = HOST_TRACKS[phase] ?? null
+  useMusic(trackName ? `/music/${trackName}.mp3` : null, { volume: MUSIC_VOLUME })
 
   const handleLogin = useCallback(async (username: string) => {
     try {
