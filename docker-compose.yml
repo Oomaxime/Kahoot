@@ -19,7 +19,7 @@ services:
       context: .
       dockerfile: player-app/Dockerfile
       args:
-        VITE_WS_URL: ws://localhost/ws
+        VITE_WS_URL: ws://localhost:3080/ws
         VITE_API_URL: ""
     restart: unless-stopped
     expose:
@@ -32,7 +32,7 @@ services:
       context: .
       dockerfile: host-app/Dockerfile
       args:
-        VITE_WS_URL: ws://localhost/ws
+        VITE_WS_URL: ws://localhost:3081/ws
         VITE_API_URL: ""
     restart: unless-stopped
     expose:
@@ -40,26 +40,20 @@ services:
     networks:
       - quiz-net
 
-  npm:
-    image: jc21/nginx-proxy-manager:2
+  nginx:
+    image: nginx:1.27-alpine
     restart: unless-stopped
     ports:
-      - "80:80"
-      - "443:443"
-      - "81:81"
+      - "3080:80"
+      - "3081:8080"
     volumes:
-      - npm-data:/data
-      - npm-letsencrypt:/etc/letsencrypt
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
     depends_on:
       - server
       - player-app
       - host-app
     networks:
       - quiz-net
-
-volumes:
-  npm-data:
-  npm-letsencrypt:
 
 networks:
   quiz-net:
